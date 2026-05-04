@@ -9,10 +9,17 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Gemini client
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
+// Health check route
+app.get("/", (req, res) => {
+  res.send("AI Summarizer backend is running 🚀");
+});
+
+// ✅ MAIN ROUTE
 app.post("/summarize", async (req, res) => {
   try {
     const { text } = req.body;
@@ -22,7 +29,7 @@ app.post("/summarize", async (req, res) => {
     }
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash", // safest latest stable model
+      model: "gemini-2.5-flash",
       contents: [
         {
           role: "user",
@@ -35,7 +42,7 @@ app.post("/summarize", async (req, res) => {
       ],
     });
 
-    const summary = response?.text || null;
+    const summary = response?.text;
 
     if (!summary) {
       return res.json({
@@ -45,7 +52,7 @@ app.post("/summarize", async (req, res) => {
 
     res.json({ summary });
   } catch (err) {
-    console.error(err);
+    console.error("Gemini Error:", err);
     res.status(500).json({ error: err.message });
   }
 });

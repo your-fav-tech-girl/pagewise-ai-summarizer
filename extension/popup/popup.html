@@ -3,35 +3,58 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Page Summarizer</title>
+    <title>Pagewise AI Summarizer</title>
     <link rel="stylesheet" href="popup.css" />
   </head>
+
   <body>
     <div class="app-shell">
+      <!-- HEADER -->
       <header class="header">
-        <div class="logo">🧠</div>
+        <div class="logo">
+          <!-- ICON LOGO  -->
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M12 2a7 7 0 0 0-7 7c0 2.5 1.2 4.7 3 6v3h8v-3c1.8-1.3 3-3.5 3-6a7 7 0 0 0-7-7Z"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path d="M9 22h6" stroke="currentColor" stroke-width="1.5" />
+          </svg>
+        </div>
+
         <div class="title-group">
           <h1>AI Summarizer</h1>
           <p>Smart webpage insights in seconds</p>
         </div>
       </header>
 
+      <!-- MAIN -->
       <main class="main-content">
         <button id="summarize-btn" class="primary-btn">Summarize Page</button>
 
+        <!-- LOADING -->
         <div id="loading" class="loading hidden">
           <div class="spinner"></div>
-          <p>Analyzing content...</p>
+          <p>AI is reading the page...</p>
         </div>
 
+        <!-- TABS -->
+        <div class="tabs">
+          <button class="tab active" data-tab="summary">Summary</button>
+          <button class="tab" data-tab="points">Key Points</button>
+          <button class="tab" data-tab="settings">Settings</button>
+        </div>
+
+        <!-- OUTPUT -->
         <section id="output" class="summary-card">
           <div class="placeholder">
-            <span>✨</span>
             <p>Click “Summarize Page” to generate structured insights.</p>
           </div>
         </section>
       </main>
 
+      <!-- FOOTER -->
       <footer class="actions">
         <button id="copy-btn" class="secondary-btn">Copy</button>
         <button id="clear-btn" class="secondary-btn">Clear</button>

@@ -4,43 +4,118 @@ const copyBtn = document.getElementById("copy-btn");
 const loading = document.getElementById("loading");
 const output = document.getElementById("output");
 
+const tabs = document.querySelectorAll(".tab");
+
+let state = {
+  summary: "",
+  points: "",
+  activeTab: "summary",
+};
+let isCoolingDown = false;
+
+//
+// LOADING UI
+//
 function showLoading(isLoading) {
   loading.classList.toggle("hidden", !isLoading);
   summarizeBtn.disabled = isLoading;
 }
 
-function renderSummary(summaryText) {
-  if (!summaryText) {
+//
+// AI PROCESSING
+//
+function extractKeyPoints(text) {
+  if (!text) return [];
+
+  return text
+    .replace(/•/g, "")
+    .split(".")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 20)
+    .slice(0, 6);
+}
+
+//
+// RENDER SYSTEM
+//
+function render() {
+  // SETTINGS TAB
+  if (state.activeTab === "settings") {
     output.innerHTML = `
-      <div class="placeholder">
-        <span>⚠️</span>
-        <p>No summary generated.</p>
+      <div class="settings-panel">
+        <h3>⚙️ Settings</h3>
+
+        <div class="setting-item">
+          <label>Summary Style</label>
+          <select>
+            <option>Bullet Points</option>
+            <option>Paragraph</option>
+            <option>Simple</option>
+          </select>
+        </div>
+
+        <div class="setting-item">
+          <label>Output Length</label>
+          <select>
+            <option>Short</option>
+            <option selected>Medium</option>
+            <option>Detailed</option>
+          </select>
+        </div>
+
+        <p class="hint">More settings coming soon 🚀</p>
       </div>
     `;
     return;
   }
 
-  const lines = summaryText.split("\n").filter((line) => line.trim() !== "");
+  // SUMMARY / POINTS
+  let content = state.activeTab === "summary" ? state.summary : state.points;
 
-  output.innerHTML = `
-    <h3>📌 Summary</h3>
-    <ul>
-      ${lines
-        .map((line) => `<li>${line.replace(/^[-•*]\s*/, "")}</li>`)
-        .join("")}
-    </ul>
-  `;
+  if (!content || content.length === 0) {
+    output.innerHTML = `
+      <div class="placeholder">
+        <span>✨</span>
+        <p>No content available</p>
+      </div>
+    `;
+    return;
+  }
+  if (isCoolingDown) return;
+
+  isCoolingDown = true;
+
+  setTimeout(() => {
+    isCoolingDown = false;
+  }, 15000); // 15 sec cooldown
+
+  if (Array.isArray(content)) {
+    output.innerHTML = `
+      <ul>
+        ${content.map((c) => `<li>${c}</li>`).join("")}
+      </ul>
+    `;
+  } else {
+    output.innerHTML = `<p>${content}</p>`;
+  }
 }
 
-function renderError(message) {
-  output.innerHTML = `
-    <div class="placeholder">
-      <span>⚠️</span>
-      <p>${message}</p>
-    </div>
-  `;
-}
+//
+// TAB SWITCHING
+//
+tabs.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    tabs.forEach((t) => t.classList.remove("active"));
+    tab.classList.add("active");
 
+    state.activeTab = tab.dataset.tab;
+    render();
+  });
+});
+
+//
+// SUMMARIZE FLOW
+//
 summarizeBtn.addEventListener("click", async () => {
   showLoading(true);
 
@@ -52,78 +127,90 @@ summarizeBtn.addEventListener("click", async () => {
   `;
 
   try {
-    // 1. Get active tab
     const [tab] = await chrome.tabs.query({
       active: true,
       currentWindow: true,
     });
 
-    // 2. Extract text from content script
     chrome.tabs.sendMessage(
       tab.id,
       { type: "EXTRACT_TEXT" },
-      async (contentResponse) => {
+      (contentResponse) => {
         if (chrome.runtime.lastError || !contentResponse?.text) {
           showLoading(false);
-          renderError("Could not extract page content.");
+          output.innerHTML = `<p>Could not extract page content</p>`;
           return;
         }
 
-        try {
-          // 3. CALL YOUR BACKEND API (THIS WAS MISSING BEFORE)
-          const response = await fetch("http://localhost:3000/summarize", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              text: contentResponse.text,
-            }),
-          });
+        chrome.runtime.sendMessage(
+          {
+            type: "SUMMARIZE",
+            text: contentResponse.text,
+          },
+          (res) => {
+            showLoading(false);
 
-          const data = await response.json();
+            if (chrome.runtime.lastError || !res) {
+              output.innerHTML = `<p>Extension communication failed</p>`;
+              return;
+            }
 
-          showLoading(false);
+            const rawText = res.summary || "";
 
-          if (!response.ok) {
-            renderError(data.error || "Summarization failed.");
-            return;
-          }
+            state.summary = rawText;
+            state.points = extractKeyPoints(rawText);
 
-          renderSummary(data.summary);
-        } catch (err) {
-          showLoading(false);
-          renderError("Backend request failed.");
-        }
+            render();
+          },
+        );
       },
     );
-  } catch (error) {
+  } catch (err) {
     showLoading(false);
-    renderError("Unexpected error occurred.");
+    output.innerHTML = `<p>Unexpected error occurred</p>`;
   }
 });
 
+//
+// CLEAR
+//
 clearBtn.addEventListener("click", () => {
-  output.innerHTML = `
-    <div class="placeholder">
-      <span>✨</span>
-      <p>Click “Summarize Page” to generate structured insights.</p>
-    </div>
-  `;
+  state = {
+    summary: "",
+    points: "",
+    activeTab: "summary",
+  };
+
+  tabs.forEach((t) => t.classList.remove("active"));
+  tabs[0].classList.add("active");
+
+  render();
 });
 
+//
+// COPY
+//
 copyBtn.addEventListener("click", async () => {
-  const text = output.innerText.trim();
+  let textToCopy = "";
 
-  if (!text) return;
+  if (state.activeTab === "summary") {
+    textToCopy = state.summary;
+  }
+
+  if (state.activeTab === "points") {
+    textToCopy = state.points.join("\n");
+  }
+
+  if (state.activeTab === "settings") {
+    textToCopy = "Settings panel (no exportable content)";
+  }
+
+  if (!textToCopy) return;
 
   try {
-    await navigator.clipboard.writeText(text);
-
+    await navigator.clipboard.writeText(textToCopy);
     copyBtn.textContent = "Copied!";
-    setTimeout(() => {
-      copyBtn.textContent = "Copy";
-    }, 1500);
+    setTimeout(() => (copyBtn.textContent = "Copy"), 1200);
   } catch {
     copyBtn.textContent = "Failed";
   }
