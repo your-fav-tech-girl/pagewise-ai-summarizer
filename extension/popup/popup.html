@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Page Summarizer</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="header">
+        <div class="logo">🧠</div>
+        <div class="title-group">
+          <h1>AI Summarizer</h1>
+          <p>Smart webpage insights in seconds</p>
+        </div>
+      </header>
+
+      <main class="main-content">
+        <button id="summarize-btn" class="primary-btn">Summarize Page</button>
+
+        <div id="loading" class="loading hidden">
+          <div class="spinner"></div>
+          <p>Analyzing content...</p>
+        </div>
+
+        <section id="output" class="summary-card">
+          <div class="placeholder">
+            <span>✨</span>
+            <p>Click “Summarize Page” to generate structured insights.</p>
+          </div>
+        </section>
+      </main>
+
+      <footer class="actions">
+        <button id="copy-btn" class="secondary-btn">Copy</button>
+        <button id="clear-btn" class="secondary-btn">Clear</button>
+      </footer>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
