@@ -14,8 +14,9 @@ export default async function handler(req, res) {
       });
     }
 
+    //
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: {
@@ -47,9 +48,9 @@ ${content}
 
     console.log("Gemini response:", JSON.stringify(data, null, 2));
 
-    if (data.error) {
+    if (!response.ok) {
       return res.status(500).json({
-        error: data.error.message || "Gemini API error",
+        error: data.error?.message || "Gemini API error",
       });
     }
 
@@ -61,7 +62,10 @@ ${content}
       });
     }
 
-    const points = summary.split("\n").filter((line) => line.trim());
+    const points = summary
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
 
     return res.status(200).json({
       points,

@@ -16,7 +16,7 @@ const ai = new GoogleGenAI({
 
 // Health check route
 app.get("/", (req, res) => {
-  res.send("AI Summarizer backend is running 🚀");
+  res.send("AI Summarizer backend is running");
 });
 
 // ✅ MAIN ROUTE
@@ -29,13 +29,23 @@ app.post("/summarize", async (req, res) => {
     }
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.0-flash",
       contents: [
         {
           role: "user",
           parts: [
             {
-              text: `Summarize this webpage in clear bullet points:\n\n${text}`,
+              text: `You are an expert AI summarizer.
+
+Convert the text into:
+- 3 to 5 bullet points
+- clear and simple English
+- no repetition
+- no filler words
+- focus only on key ideas
+
+Text:
+${text}`,
             },
           ],
         },
