@@ -25,7 +25,11 @@ function extractReadableContent() {
     for (const selector of prioritySelectors) {
       const element = document.querySelector(selector);
 
-      if (element && element.innerText.trim().length > 500) {
+      if (
+        element &&
+        element.innerText &&
+        element.innerText.trim().length > 500
+      ) {
         mainContent = element;
         break;
       }
@@ -35,6 +39,8 @@ function extractReadableContent() {
     if (!mainContent) {
       mainContent = document.body;
     }
+
+    if (!mainContent) return "";
 
     // Clone node to avoid touching real page
     const clonedContent = mainContent.cloneNode(true);
@@ -71,21 +77,23 @@ function extractReadableContent() {
       clonedContent.querySelectorAll(selector).forEach((el) => el.remove());
     });
 
-    // Light cleanup (safe version — avoids breaking real content)
-    clonedContent.querySelectorAll("*").forEach((node) => {
+    // Faster targeted cleanup (instead of all nodes)
+    clonedContent.querySelectorAll("p, div, span, li").forEach((node) => {
       const text = node.innerText?.trim() || "";
 
-      if (text.length < 20) {
+      if (text.length < 20 && node.children.length === 0) {
         node.remove();
       }
     });
 
     // Final clean output
-    return clonedContent.innerText
-      .replace(/\s+/g, " ")
-      .replace(/(\n\s*)+/g, "\n")
-      .trim()
-      .slice(0, 15000);
+    return (
+      clonedContent.innerText
+        ?.replace(/\s+/g, " ")
+        .replace(/(\n\s*)+/g, "\n")
+        .trim()
+        .slice(0, 8000) || ""
+    );
   } catch (error) {
     console.error("Readable extraction failed:", error);
     return "";
@@ -93,29 +101,37 @@ function extractReadableContent() {
 }
 
 //
-// MESSAGE HANDLER (FIXED)
+// MESSAGE HANDLER (OPTIMIZED)
 //
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === "EXTRACT_TEXT") {
     try {
       setTimeout(() => {
-        const text = extractReadableContent();
+        try {
+          const text = extractReadableContent();
 
-        if (!text || text.trim().length === 0) {
+          if (!text || text.trim().length === 0) {
+            sendResponse({
+              error: "No readable content found",
+            });
+            return;
+          }
+
+          sendResponse({ text });
+        } catch (error) {
           sendResponse({
-            error: "No readable content found",
+            error: error.message,
           });
-          return;
         }
-
-        sendResponse({ text });
-      }, 300);
+      }, 50); // Reduced delay for faster response
 
       return true; // IMPORTANT: keeps async response alive
     } catch (error) {
       sendResponse({
         error: error.message,
       });
+
+      return true;
     }
   }
 });
