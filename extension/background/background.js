@@ -48,7 +48,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   });
 
   if (request.type === "SUMMARIZE") {
-    fetch("https://pagewise-ai-summarizer.vercel.app/", {
+    fetch("https://ai-summarizer-backend-dx0u.onrender.com/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
