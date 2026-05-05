@@ -1,12 +1,6 @@
 # Pagewise — AI Page Summarizer
 
-A polished Chrome Extension (Manifest V3) that extracts content from any webpage and delivers an AI-powered structured summary using Anthropic's Claude.
-
----
-
-## Demo
-
-> **[Include your 2–5 minute walkthrough video here]**
+A polished Chrome Extension (Manifest V3) that extracts content from any webpage and delivers an AI-powered structured summary using GEMINI AI.
 
 ---
 
@@ -15,7 +9,7 @@ A polished Chrome Extension (Manifest V3) that extracts content from any webpage
 - **Instant summaries** — bullet points, key insights, sentiment analysis, and estimated reading time
 - **In-page highlighting** — marks the most important phrases directly on the page
 - **Smart caching** — summaries are cached per URL for 30 minutes to avoid repeat API calls
-- **Model selection** — choose between Claude Haiku (fast), Sonnet (balanced), or Opus (most capable)
+- **Model selection** — Gemini 2.0 flash
 - **Secure by design** — API key stored locally in `chrome.storage`, never exposed to content scripts
 - **Rate limiting** — 10 requests/minute enforced in the background service worker
 - **Clean UX** — loading states, error handling, copy-to-clipboard, dark theme
@@ -29,15 +23,16 @@ This is a local extension and is **not listed on the Chrome Web Store**.
 ### Prerequisites
 
 - Google Chrome (or Chromium-based browser) — version 88+
-- An [Anthropic API key](https://console.anthropic.com)
+- Gemini api for creating API KEYS
+- Google ai studio for importing project to enable API KEYS
 
 ### Steps
 
 1. **Clone or download this repository**
 
    ```bash
-   git clone https://github.com/your-username/pagewise-extension.git
-   cd pagewise-extension
+   git clone https://github.com/your-fav-tech-girl/pagewise-ai-summarizer.git
+   cd pagewise-ai-summarizer
    ```
 
 2. **Open Chrome Extensions page**
@@ -58,7 +53,7 @@ This is a local extension and is **not listed on the Chrome Web Store**.
 
 6. **Add your API key**
 
-   Click the extension icon → click ⚙ Settings → paste your Anthropic API key → Save.
+   Click the extension icon → click ⚙ Settings → paste your GEMINI API key → Save.
 
 7. **Use it!**
 
@@ -76,7 +71,7 @@ pagewise-extension/
 ├── popup.html             # Extension popup UI shell
 ├── popup.css              # Styles (dark theme, animations)
 ├── popup.js               # Popup controller — UI logic + Chrome messaging
-└── icons/                 # Extension icons (16, 32, 48, 128px)
+└── icons/                 # Extension icons (16, 32, 48)
 ```
 
 ### Data flow
@@ -94,7 +89,7 @@ pagewise-extension/
                                       │
                                   Check cache
                                       │ miss
-                                  POST /v1/messages ──▶ Anthropic API
+                                  POST /v1/messages ──▶ GEMINI API
                                       │
                                   Cache result
                                       │
@@ -111,9 +106,9 @@ pagewise-extension/
 
 ## AI Integration
 
-**Provider:** Anthropic Claude  
-**Endpoint:** `https://api.anthropic.com/v1/messages`  
-**Default model:** `claude-haiku-4-5-20251001` (fast and affordable)
+**Provider:** `@google/genai`
+**Endpoint:** `https://your-project.vercel.app/api/summarize`
+**Default model:**`gemini-2.0-flash` (fast and affordable)
 
 The background service worker constructs a structured prompt asking Claude to return a JSON object with:
 
@@ -150,8 +145,6 @@ The response is parsed as JSON and rendered into the popup UI with staggered CSS
 **Content extraction** — Uses heuristic scoring and semantic selectors rather than a full Readability parser (like Mozilla's `readability.js`) to keep the extension dependency-free and load instantly. Works well on articles and blog posts; may struggle with heavily JavaScript-rendered SPAs.
 
 **Single-file extension** — No build step required. The extension runs directly from source files, making it easy to inspect, modify, and load unpacked. The trade-off is no bundling/tree-shaking, but the files are already small enough that this doesn't matter.
-
-**Direct browser API calls** — Uses `anthropic-dangerous-direct-browser-access: true` header instead of a proxy server. This is acceptable for a local extension where the user owns the API key, but a production deployment should route through a backend proxy to rotate keys and add additional rate limiting.
 
 ---
 

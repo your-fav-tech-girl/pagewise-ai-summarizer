@@ -26,6 +26,16 @@ body.dark-mode {
   --btn-hover: #0657bb;
   --btn-text: #0f172a;
 }
+body.dark .title-group h1 {
+  color: #ffffff;
+}
+body.dark .title-group p {
+  color: #ffffff;
+}
+body.dark {
+  background: #0f172a;
+  color: #e5e7eb;
+}
 
 .app-shell {
   padding: 14px;
@@ -322,4 +332,8 @@ body.dark {
 body.dark .summary-card {
   background: #111827;
   border-color: #1f2937;
+}
+.theme-icon {
+  width: 24px;
+  height: 24px;
 }
